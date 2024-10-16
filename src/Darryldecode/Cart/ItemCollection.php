@@ -125,20 +125,18 @@ class ItemCollection extends Collection
     public function getPriceTotalWithConditions($formatted = true)
     {
         $originalTotalPrice = $this->price * $this->quantity;
+        $originalPrice = $this->price;
         $newPrice = 0.00;
         $processed = 0;
         if ($this->hasConditions()) {
 
             if (is_array($this->conditions)) {
-                foreach ($this->conditions as $condition) {
-                    ($processed > 0) ? $toBeCalculated = $discount : $toBeCalculated = $this->price;
-
-                    $discount = $condition->getCalculatedValue($toBeCalculated);
-                    
-                    $newTotal = $originalTotalPrice - ($discount * $this->quantity);
-
-                    $processed++;
-                }
+                $discount = 0; 
+                foreach ($this->conditions as $condition) {   
+                    ($processed > 0) ? $toBeCalculated = ($originalPrice - $discount) : $toBeCalculated = $originalPrice;
+                    $discount = $discount + $condition->getCalculatedValue($toBeCalculated); 
+                }  
+                $newTotal = $originalTotalPrice - ($discount * $this->quantity);
             } else {
                 $discount = $this['conditions']->getCalculatedValue($this->price) * $this->quantity;
                 $newTotal = $originalTotalPrice - $discount;
