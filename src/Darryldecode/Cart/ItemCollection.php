@@ -121,6 +121,33 @@ class ItemCollection extends Collection
         return Helpers::formatValue($originalPrice, $formatted, $this->config);
     }
 
+    
+    public function getPriceTotalWithConditions($formatted = true)
+    {
+        $originalTotalPrice = $this->price * $this->quantity;
+        $newPrice = 0.00;
+        $processed = 0;
+        if ($this->hasConditions()) {
+
+            if (is_array($this->conditions)) {
+                foreach ($this->conditions as $condition) {
+                    ($processed > 0) ? $toBeCalculated = $discount : $toBeCalculated = $this->price;
+
+                    $discount = $condition->getCalculatedValue($toBeCalculated);
+                    
+                    $newTotal = $originalTotalPrice - ($discount * $this->quantity);
+
+                    $processed++;
+                }
+            } else {
+                $discount = $this['conditions']->getCalculatedValue($this->price) * $this->quantity;
+                $newTotal = $originalTotalPrice - $discount;
+            }
+            return Helpers::formatValue($newTotal, $formatted, $this->config);
+        }
+        return Helpers::formatValue($originalTotalPrice, $formatted, $this->config);
+    }
+
     /**
      * get the sum of price in which conditions are already applied
      * @param bool $formatted
@@ -128,6 +155,6 @@ class ItemCollection extends Collection
      */
     public function getPriceSumWithConditions($formatted = true)
     {
-        return Helpers::formatValue($this->getPriceWithConditions(false) * $this->quantity, $formatted, $this->config);
+        return Helpers::formatValue($this->getPriceTotalWithConditions(false), $formatted, $this->config);
     }
 }
